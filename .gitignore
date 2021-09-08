@@ -1,0 +1,8 @@
+/target/
+.idea
+.settings
+.project
+*.csv
+*.txt
+*.binary
+*.test
