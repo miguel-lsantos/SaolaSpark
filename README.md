@@ -1,3 +1,3 @@
-#SaloaSpark
+# SaloaSpark
 
-##A SAOLA algorithm parallelization using Apache Spark
+## A SAOLA algorithm parallelization using Apache Spark
