@@ -50,28 +50,8 @@ public class SparkSaola {
                 columnAndRowList.add(Tuple2.apply(j, Double.parseDouble(wordArray[j])));
             }
             return columnAndRowList.iterator();
-//            int column = 0;
-//            int i = 0;
-//            int j = line.indexOf(',');
-//            while (j >= 0)
-//            {
-//                columnAndRowList.add(new Tuple2<>(column++, Double.parseDouble(line.substring(i, j))));
-//                i = j + 1;
-//                j = line.indexOf(',', i);
-//            }
-//            columnAndRowList.add(new Tuple2<>(column, Double.parseDouble(line.substring(i))));
-//
-//            return columnAndRowList.iterator();
         });
 
-//        JavaPairRDD<Integer, List<Double>> byColumn2 = byColumn.combineByKey(((value) -> new ArrayList<Double>() {{ add(value); }}),
-//        ((acc, value) -> {
-//            acc.add(value);
-//            return acc;
-//        }), ((acc1, acc2) -> {
-//            acc1.addAll(acc2);
-//            return acc1;
-//        }), sparkContext.defaultParallelism() * 3);
         JavaPairRDD<Integer, ArrayList<Double>> byColumn2 = byColumn.aggregateByKey(new ArrayList<>(),
                 new SeqPartitioner(columns,sparkContext.defaultParallelism() * multiplier),
                 ((acc, value) -> {
@@ -83,43 +63,6 @@ public class SparkSaola {
                 }));
 
         Broadcast<Double> doubleRowsBroadcast = sparkContext.broadcast((double) rows);
-//        byColumn.mapPartitions(new FlatMapFunction<Iterator<Tuple2<Integer, Double>>, Tuple2<Integer, Double>>() {
-//            @Override
-//            public Iterator<Tuple2<Integer, Double>> call(Iterator<Tuple2<Integer, Double>> tuple2Iterator) throws Exception {
-//                List<Tuple2<Integer, Double>> actualList = new ArrayList<>();
-//                tuple2Iterator.forEachRemaining(actualList::add);
-//                actualList.sort((x,y) -> { return x._1().compareTo(y._1());});
-//                return actualList.iterator();
-//            }
-//        }, true);
-
-//        byColumn = byColumn.foldByKey("", ((v1, v2) -> {return v1 + "," + v2;}));
-
-
-//        Feature classFeature = byColumn2.filter((x) -> x._1()==0).map((tuple) -> {
-//            int numberRows = doubleRowsBroadcast.getValue().intValue();
-//            short[] featureArray = new short[numberRows];
-//            List<Double> wordList = tuple._2();
-//            short number;
-//            int maxNumber = 0;
-//            int minNumber = 0;
-//
-//            for(int j = 0; j<wordList.size(); j++){
-//                double numberDouble = wordList.get(j);
-//                number = (short) Math.floor(numberDouble);
-//                featureArray[j] = number;
-//                if (number > maxNumber)
-//                    maxNumber = number;
-//                if (number < minNumber)
-//                    minNumber = number;
-//            }
-//
-//            Feature feature = new Feature(featureArray, tuple._1, maxNumber-minNumber+1, minNumber);
-//
-//            feature.calculateEntropy(numberRows);
-//
-//            return feature;
-//        }).first();
 
         JavaRDD<Feature> featureJavaRDD = byColumn2.map((tuple) -> {
             short[] featureArray = new short[doubleRowsBroadcast.getValue().intValue()];
@@ -175,13 +118,6 @@ public class SparkSaola {
         long time = new Date().getTime() - startTime;
         System.out.print("Time=");
         System.out.println(time);
-
-//        try {
-//            Scanner scanner = new Scanner(System.in);
-//            scanner.nextLine();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
 
         spark.stop();
     }
